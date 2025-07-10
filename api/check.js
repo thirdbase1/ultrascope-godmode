@@ -1,40 +1,32 @@
-import { config } from 'dotenv';
-config();
-import generateScript from '../lib/scanScript.js';
-import validateEmail from '../utils/validator.js';
-import { logResult, recordError } from '../utils/memory.js';
-import attemptSelfFix from '../utils/selfFix.js';
+import { isValidEmail } from '../utils/validator.js';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-  const { email } = req.body;
-  if (!validateEmail(email)) return res.status(400).json({ error: 'Invalid email format' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
+  }
 
-  const browserlessToken = process.env.BROWSERLESS_TOKEN;
-  const browserlessURL = `https://chrome.browserless.io/playwright?token=${browserlessToken}`;
-  const script = generateScript(email);
+  const { email } = req.body;
+
+  if (!email || !isValidEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
 
   try {
-    const result = await fetch(browserlessURL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: script }),
-    });
+    console.log('Checking:', email);
 
-    const html = await result.text();
-    const isRegistered = html.includes("We've sent an email to");
+    // Dummy simulation of Instagram check
+    // Replace this with your actual scanner logic
+    const registered = email.includes('gmail');
 
-    await logResult(email, isRegistered);
-    res.json({
+    res.status(200).json({
       email,
-      registered: isRegistered,
-      message: isRegistered
+      registered,
+      message: registered
         ? '✅ Email is linked to an Instagram account.'
-        : '❌ Email is not linked.',
+        : '❌ Email is not linked to any Instagram account.',
     });
   } catch (err) {
-    await recordError(email, err);
-    await attemptSelfFix();
-    res.status(500).json({ error: 'UltraScope encountered a disruption and is auto-healing.' });
+    console.error('🔥 Server Error:', err.message);
+    res.status(500).json({ message: 'A server error has occurred', error: err.message });
   }
 }
