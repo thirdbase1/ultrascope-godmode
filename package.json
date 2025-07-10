@@ -1,0 +1,10 @@
+{
+  "name": "ultrascope-godmode",
+  "version": "3.0.0",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "openai": "^4.0.0",
+    "node-telegram-bot-api": "^0.61.0"
+  }
+}
