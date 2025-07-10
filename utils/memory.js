@@ -1,24 +1,25 @@
-import fs from 'fs/promises';
-const resultPath = './memory/results.json';
-const errorPath = './memory/errors.json';
+import fs from 'fs';
+import path from 'path';
 
-export async function logResult(email, status) {
-  const data = { email, status, timestamp: new Date().toISOString() };
-  const logs = await readJson(resultPath);
-  logs.push(data);
-  await fs.writeFile(resultPath, JSON.stringify(logs, null, 2));
+const resultsPath = path.join(process.cwd(), 'memory', 'results.json');
+const errorsPath = path.join(process.cwd(), 'memory', 'errors.json');
+
+export function saveResult(entry) {
+  const data = readJson(resultsPath);
+  data.push(entry);
+  fs.writeFileSync(resultsPath, JSON.stringify(data, null, 2));
 }
 
-export async function recordError(email, error) {
-  const logs = await readJson(errorPath);
-  logs.push({ email, error: error.message, time: new Date().toISOString() });
-  await fs.writeFile(errorPath, JSON.stringify(logs, null, 2));
+export function saveError(entry) {
+  const data = readJson(errorsPath);
+  data.push(entry);
+  fs.writeFileSync(errorsPath, JSON.stringify(data, null, 2));
 }
 
-async function readJson(path) {
+function readJson(filePath) {
   try {
-    const file = await fs.readFile(path, 'utf-8');
-    return JSON.parse(file);
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(raw);
   } catch {
     return [];
   }
